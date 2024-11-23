@@ -1,0 +1,677 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+    <title>Word Game</title>
+
+	<style>
+	@font-face {
+
+	  font-family: 'Default';
+	  font-style: normal;
+	  font-weight: 400;
+	  src: url(https://fonts.gstatic.com/s/opensans/v14/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format('woff2');
+	}
+
+	body {
+
+		font-family: 'Default';
+		background-color: #f4f4f4;
+		min-height: 100vh;
+		padding: 0px;
+		margin: 0px;
+	}
+
+	* {
+
+		box-sizing: border-box;
+		user-select: none;
+	}
+
+	.FlexVerticalAlign {
+	
+		display: flex; 
+		align-items: center; 
+		justify-content: center; 
+		height: 100%; 
+		flex-direction: column;
+	}
+
+	.OuterBox {
+	
+		background-color: rgb(255, 255, 255);
+		border-radius: 4px;
+		box-shadow: 0px 10px 10px rgba(0,0,0,0.1);
+		position: absolute;
+		width: 610px;
+		height: 520px;
+		top: calc(50% - 260px);
+		left: calc(50% - 305px);
+		overflow: hidden;
+	}
+
+	.PlayArea {
+
+		width: 100%;
+		height: 80%;
+		padding: 30px;
+		position: relative;
+	}
+
+	.Word {
+
+		position: absolute;
+		font-size: 21px;
+	}
+
+	.Line {
+
+		background-color: #888888;
+		width: 300px;
+		height: 1px;
+		position: absolute;
+		bottom: 60px;
+		left: calc(50% - 150px);
+		transition: all 0.3s;
+		border-radius: 0px;
+	}
+
+	.Instructions {
+	
+		color: #d5d5d5;
+		font-size: 12px;
+		position: absolute;
+		bottom: 25px;
+		text-align: center;
+		width: 90%;
+		pointer-events: none;
+	}
+
+	.Timer {
+	
+		color: #888888;
+		font-size: 12px;
+		position: absolute;
+		top: 20px;
+		text-align: center;
+		width: 90%;
+		pointer-events: none;
+	}
+
+	.LineOk, .LineNotOk {
+	
+		height: 8px;
+		transform: translateY(4px);
+		border-radius: 4px;
+	}
+
+	.LineOk {
+	
+		background-color: rgb(65, 200, 100);
+	}
+
+	.LineNotOk {
+	
+		background-color: rgb(235, 65, 65);
+	}
+
+	.Button {
+	
+		padding: 10px;
+		padding-left: 30px;
+		padding-right: 30px;
+		color: #ffffff;
+		background-color: rgb(65, 200, 100);
+		display: inline-block;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.Screen {
+
+		position: absolute;
+		padding: 30px;
+		top: 0px;
+		left: 0px;
+		right: 0px;
+		bottom: 0px;
+		opacity: 0;
+		display: none;
+	}
+
+	.ActiveScreen {
+
+		opacity: 1;
+		display: block;
+	}
+
+	.Title {
+
+		font-size: 60px;
+		color: #d5d5d5;
+		margin-bottom: 30px;
+		text-align: center;
+		text-transform: uppercase;
+	}
+
+	.Score {
+
+		font-size: 60px;
+		color: #000000;
+		line-height: 60px;
+		margin-bottom: 30px;
+	}
+
+	.YourScore {
+
+		font-size: 24px;
+		color: #d5d5d5;
+		text-transform: uppercase;
+	}
+
+	.GreenFill {
+
+		border-radius: 50%; 
+		width: 50px; 
+		height: 50px; 
+		opacity: 0; 
+		background-color: rgb(65, 200, 100); 
+		transition: all 0.5s; 
+		position: absolute; 
+		left: calc(50% - 25px); 
+		top: calc(50% - 25px);
+		pointer-events: none;
+		z-index: 10000;
+		transform: scale(1);
+	}
+
+	.GreenFillFlat {
+
+		width: 50px; 
+		height: 50px; 
+		opacity: 0; 
+		background-color: rgb(65, 200, 100); 
+		transition: all 0.5s; 
+		position: absolute; 
+		left: calc(50% - 25px); 
+		top: calc(50% - 25px);
+		pointer-events: none;
+		z-index: 10000;
+		transform: scale(20);
+	}
+
+	.GreenFillActive {
+
+		transition: all 0.5s; 
+		transform: scale(20);
+		opacity: 1;
+		z-index: 10000;
+		cursor: default;
+		pointer-events: all;
+	}
+	</style>
+
+	<script>
+		var WG = null;
+
+		function GetNow() {
+
+			return new Date().getTime();
+		}
+
+		function OnLoad() {
+
+			document.body.addEventListener("mousemove", WordOnMouseMove, true);
+			document.body.addEventListener("mouseup", WordOnMouseUp, true);
+
+			ShowStartScreen();
+		}
+
+		function ShowStartScreen() {
+
+			E("startScreen").classList.add("ActiveScreen");
+		}
+
+		function StartGameButtonClick() {
+
+			E("startScreenFill").classList.add("GreenFillActive");
+			setTimeout(GoToStartGame, 1000);
+		}
+
+		function RestartGameButtonClick() {
+
+			E("endScreenFill").classList.add("GreenFillActive");
+			setTimeout(GoToStartGame, 1000);
+		}
+
+		function GoToStartGame() {
+
+			E("endScreenFill").classList.remove("GreenFillActive");
+			E("endScreen").classList.remove("ActiveScreen");
+			E("startScreen").classList.remove("ActiveScreen");
+			E("playScreen").classList.add("ActiveScreen");
+
+			StartGame();
+		}
+
+		function StartGame() {
+
+			WG = {
+
+				dragOffset: { x: 0, y: 0 },
+				dragOrigin: { x: 0, y: 0 },
+				dragElement: null,
+				dragElementSize: { x: 0, y: 0 },
+				dragElementCanBeDropped: false,
+				dragElementDropAfter: false,
+				droppedText: '',
+				droppedElements: [],
+				sentence: "It's all about the flow",
+				startTime: GetNow(),
+				endTime: 0,
+				renderTimeInterval: null,
+			}
+
+			E("instructions").textContent = 'Form the sentece "' + WG.sentence + '" on the line';
+
+			var words = WG.sentence.split(" ");
+			var usedRectangles = [];
+			var elements = [];
+
+			for (var i = 0; i < words.length; ++i) {
+
+				elements.push(MakeWord(words[i], usedRectangles));
+			}
+
+			for (var i = 0; i < elements.length; ++i) {
+
+				var e = elements[i];
+				e.style.transform = 'translateY(-30px)';
+				e.style.opacity = 0;
+				ForcePaint(e);
+				e.style.transition = 'all 0.5s ' + (i * 0.1) + 's';
+				ForcePaint(e);
+				e.style.transform = 'translateY(0px)';
+				e.style.opacity = 1;
+			}
+
+			RenderTimer();
+			WG.renderTimeInterval = setInterval(RenderTimer, 1000);
+
+			E("playScreenFill").classList.remove("GreenFillActive");
+		}
+
+		function RenderTimer() {
+
+			var d = GetNow() - WG.startTime;
+			E("timer").textContent = TimeSpanToString(d);
+		}
+
+		function TimeSpanToString(ts) {
+
+			var seconds = parseInt(ts / 1000);
+			var minutes = parseInt(seconds / 60);
+			seconds -= minutes * 60;
+
+			var s = '';
+			s += minutes;
+			s += ':';
+			s += seconds;
+
+			return s;
+		}
+
+		function R(e) {
+
+			var cr = e.getBoundingClientRect();
+
+			var r = {
+
+				l: Math.round(cr.left) - window.pageXOffset,
+				t: Math.round(cr.top) - window.pageYOffset,
+				r: Math.round(cr.right) - window.pageXOffset,
+				b: Math.round(cr.bottom) - window.pageYOffset
+			};
+
+			return r;
+		}
+
+		function RectanglesIntersect(r0, r1) {
+
+			if (r0.l > r1.r || r0.r < r1.l || r0.t > r1.b || r0.b < r1.t) {
+
+				return false;
+			}
+
+			return true;
+		}
+
+		function E(id) { 
+			
+			return document.getElementById(id); 
+		}
+
+		function PageToBoxCoordinates(pc) {
+
+			var obr = R(E("playArea"));
+			return { x: pc.x - obr.l, y: pc.y - obr.t };
+		}
+
+		function WordOnMouseDown(ev) {
+
+			var e = ev.target;
+			var pageXYInBox = PageToBoxCoordinates({ x: ev.pageX, y: ev.pageY });
+
+			var x = pageXYInBox.x;
+			var y = pageXYInBox.y;
+
+			var r = R(e);
+			var bc = PageToBoxCoordinates({ x: r.l, y: r.t });
+
+			WG.dragElement = e;
+			WG.dragOrigin.x = bc.x;
+			WG.dragOrigin.y = bc.y;
+			WG.dragOffset.x = (x - bc.x);
+			WG.dragOffset.y = (y - bc.y);
+			WG.dragElementSize.x = (r.r - r.l);
+			WG.dragElementSize.y = (r.b - r.t);
+
+			var tc = e.textContent;
+
+			if (WG.sentence.indexOf((tc + ' ' + WG.droppedText).trim()) != -1) {
+
+				WG.dragElementCanBeDropped = true;
+				WG.dragElementDropAfter = false;
+
+			} else if (WG.sentence.indexOf((WG.droppedText + ' ' + tc).trim()) != -1) {
+
+				WG.dragElementCanBeDropped = true;
+				WG.dragElementDropAfter = true;
+
+			} else {
+
+				WG.dragElementCanBeDropped = true
+			}
+		}
+
+		function WordIsNearLine() {
+
+			if (!WG || !WG.dragElement) { return false; }
+
+			var rl = R(E("line"));
+			rl.t -= 20;
+
+			var rw = R(WG.dragElement);
+
+			if (RectanglesIntersect(rl, rw)) {
+
+				return true;
+			}
+
+			return false;
+		}
+
+		function WordOnMouseUp(ev) {
+
+			if (!WG || !WG.dragElement) { return; } // not dragging
+
+			var line = E("line");
+
+			if (WordIsNearLine() && WG.dragElementCanBeDropped) {
+
+				if (WG.dragElementDropAfter) {
+
+					WG.droppedText = (WG.droppedText + ' ' + WG.dragElement.textContent).trim();
+					WG.droppedElements.push(WG.dragElement);
+
+				} else {
+
+					WG.droppedText = (WG.dragElement.textContent + ' ' + WG.droppedText).trim();
+					WG.droppedElements.splice(0, 0, WG.dragElement);
+				}
+
+				var r = R(line);
+				var lineStart = PageToBoxCoordinates({ x: r.l, y: r.t });
+				var lineWidth = (r.r - r.l);
+				var widths = [];
+				var textWidth = 0;
+				var spaceBetweenWords = 10;
+
+				for (var i = 0; i < WG.droppedElements.length; ++i) {
+
+					var dei = WG.droppedElements[i];
+					var deir = R(dei);
+					var w = deir.r - deir.l;
+					widths[i] = w;
+
+					if (i) { textWidth += spaceBetweenWords; }
+					textWidth += w;
+				}
+
+				var startOffset = (lineWidth - textWidth) / 2;
+				var widthSoFar = 0;
+
+				for (var i = 0; i < WG.droppedElements.length; ++i) {
+
+					var dei = WG.droppedElements[i];
+					dei.style.transition = 'all 0.3s';
+					dei.style.top = (lineStart.y - 26) + 'px';
+					dei.style.left = (lineStart.x + startOffset + widthSoFar) + 'px';
+
+					widthSoFar += widths[i] + spaceBetweenWords;
+				}
+
+				WG.dragElement.style.pointerEvents = 'none';
+
+			} else {
+
+				var pageXYInBox = PageToBoxCoordinates({ x: ev.pageX, y: ev.pageY });
+
+				var x = pageXYInBox.x;
+				var y = pageXYInBox.y;
+
+				var wx = (x - WG.dragOffset.x);
+				var wy = (y - WG.dragOffset.y);
+
+				var dw = WG.dragElement.offsetWidth;
+				var dh = WG.dragElement.offsetHeight;
+
+				if (wx < 0 || wy < 0 || wx > 550 - dw || wy > 440 - dh) {
+
+					// bork it
+
+				} else {
+
+					WG.dragElement.style.transition = 'all 0.3s';
+					ForcePaint(WG.dragElement);
+					WG.dragElement.style.left = WG.dragOrigin.x + 'px';
+					WG.dragElement.style.top = WG.dragOrigin.y + 'px';
+				}
+			}
+
+			line.classList.remove("LineOk");
+			line.classList.remove("LineNotOk");
+			
+			if (WG.droppedText == WG.sentence) {
+
+				WG.endTime = GetNow();
+				clearInterval(WG.renderTimeInterval);
+				E("playScreen").classList.remove("ActiveScreen");
+				E("endScreen").classList.add("ActiveScreen");
+				E("playScreenFill").classList.add("GreenFillActive");
+
+				var words = document.querySelectorAll(".Word");
+
+				for (var i = 0; i < words.length; ++i) {
+
+					words[i].parentNode.removeChild(words[i]);
+				}
+
+				E("score").textContent = TimeSpanToString(WG.endTime - WG.startTime);
+			}
+
+			WG.dragElement = null;
+		}
+
+		function ForcePaint(e) {
+
+			R(e);
+		}
+
+		function WordOnMouseMove(ev) {
+
+			if (!WG || !WG.dragElement) { return; }
+
+			var pageXYInBox = PageToBoxCoordinates({ x: ev.pageX, y: ev.pageY });
+
+			var x = pageXYInBox.x;
+			var y = pageXYInBox.y;
+
+			var wx = (x - WG.dragOffset.x);
+			var wy = (y - WG.dragOffset.y);
+
+			var dw = WG.dragElement.offsetWidth;
+			var dh = WG.dragElement.offsetHeight;
+
+			WG.dragElement.style.transition = 'none';
+			ForcePaint(WG.dragElement);
+			WG.dragElement.style.left = wx + 'px';
+			WG.dragElement.style.top = wy + 'px';
+
+			var line = E("line");
+
+			if (WordIsNearLine()) {
+
+				if (WG.dragElementCanBeDropped) {
+
+					line.classList.add("LineOk");
+					line.classList.remove("LineNotOk");
+
+				} else {
+
+					line.classList.remove("LineOk");
+					line.classList.add("LineNotOk");
+				}
+
+			} else {
+
+				line.classList.remove("LineOk");
+				line.classList.remove("LineNotOk");
+			}
+		}
+
+		function MakeWord(word, usedRectangles) {
+
+			var div = document.createElement("div");
+			div.className = 'Word';
+			div.textContent = word;
+			div.style.zIndex = 1000;
+			div.style.left = '-10000px';
+			div.style.cursor = 'default';
+			div.style.display = 'block';
+			div.addEventListener("mousedown", WordOnMouseDown, true);
+			
+			var playArea = E("playArea");
+
+			playArea.append(div);
+
+			var rect = R(div);
+			var rectWidth = (rect.r - rect.l);
+			var rectHeight = (rect.b - rect.t);
+
+			var playAreaRect = R(playArea);
+			var playAreaWidth = (playAreaRect.r - playAreaRect.l);
+			var playAreaHeight = (playAreaRect.b - playAreaRect.t);
+
+			while (true) {
+
+				var x = RandomInt(rectWidth / 2, playAreaWidth - rectWidth);
+				var y = RandomInt(rectHeight / 2, playAreaHeight - rectHeight);
+
+				var r = { t: y, l: x, r: x + rectWidth, b: y + rectHeight };
+
+				var collides = false;
+
+				for (var i = 0; i < usedRectangles.length; ++i) {
+
+					if (RectanglesIntersect(usedRectangles[i], r)) {
+
+						collides = true;
+						break;
+					}
+				}
+
+				if (!collides) { 
+					
+					usedRectangles.push(r);
+					break;
+				}
+			}
+
+			div.style.left = x + 'px';
+			div.style.top = y + 'px';
+
+			return div;
+		}
+
+		function RandomInt(min, max) {
+
+			var range = max - min;
+			var r = (Math.random() * range) + min;
+			return parseInt(r);
+		}
+
+		window.onload = OnLoad;
+	</script>
+
+</head>
+
+<body>
+
+	<div id="outerBox" class="OuterBox">
+
+		<div id="startScreen" class="Screen">
+
+			<div id="startScreenFill" class="GreenFill"></div>
+
+			<div class="FlexVerticalAlign">
+
+				<div class="Title">Word Game</div>
+				<div class="Button" onclick="StartGameButtonClick(this)">Start Game</div>
+
+			</div>
+
+
+		</div>
+
+		<div id="playScreen" class="Screen">
+
+			<div id="playScreenFill" class="GreenFillFlat GreenFillActive"></div>
+
+			<div id="playArea" class="PlayArea"></div>
+
+			<div id="line" class="Line"></div>
+			<div id="instructions" class="Instructions"></div>
+			<div id="timer" class="Timer"></div>
+
+		</div>
+
+		<div id="endScreen" class="Screen">
+
+			<div id="endScreenFill" class="GreenFill"></div>
+
+			<div class="FlexVerticalAlign">
+
+				<div class="YourScore">Your Score</div>
+				<div id="score" class="Score"></div>
+				<div class="Button" onclick="RestartGameButtonClick(this)">Play Again</div>
+
+			</div>
+
+		</div>
+
+	</div>
+
+</body>
+</html>
